@@ -65,7 +65,7 @@ runs:
         git clone $CLONEARGS https://github.com/radareorg/radare2.git /tmp/_r2build
         cd /tmp/_r2build
         export CFLAGS="-O2 -Wno-unused-result"
-        ./sys/install.sh "$R2_PREFIX"
+        ./sys/install.sh --install
         cd /
         rm -rf /tmp/_r2build
 
