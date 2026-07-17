@@ -152,10 +152,9 @@ runs:
           *) PKG_ARCH="x64" ;;
         esac
         BASE="https://github.com/radareorg/radare2/releases/download/${R2V}"
-        cd /tmp
-        curl -fsSL "${BASE}/radare2-${PKG_ARCH}-${R2V}.pkg" -o r2.pkg
+        cd "$RUNNER_TEMP"
+        curl -fsSL --retry 3 "${BASE}/radare2-${PKG_ARCH}-${R2V}.pkg" -o r2.pkg
         sudo installer -pkg r2.pkg -target /
-        rm -f r2.pkg
 
     # --- INSTALL FROM RELEASE (Windows) ---
     - name: Install from release (Windows)
