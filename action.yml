@@ -202,7 +202,5 @@ runs:
       shell: bash
       run: |
         set -e
-        R2_VERSION_OUTPUT="$(radare2 -v)"
-        printf '%s\n' "$R2_VERSION_OUTPUT"
-        R2_VERSION="$(printf '%s\n' "$R2_VERSION_OUTPUT" | awk 'NR == 1 { print $2 }')"
-        echo "version=$R2_VERSION" >> "$GITHUB_OUTPUT"
+        radare2 -v
+        echo "version=$(radare2 -qv)" >> "$GITHUB_OUTPUT"
