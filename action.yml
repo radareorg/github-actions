@@ -29,14 +29,25 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Validate release prefix
-      if: inputs.from-git != 'true' && runner.os != 'Windows'
+    - name: Resolve prefix
+      id: prefix
       shell: bash
       env:
         R2_PREFIX: ${{ inputs.prefix }}
       run: |
         PREFIX="${R2_PREFIX:-/usr}"
-        if [ "$PREFIX" != "/usr" ]; then
+        if [ "$RUNNER_OS" = "Windows" ] && [ "$PREFIX" = "/usr" ]; then
+          PREFIX="$RUNNER_TEMP/radare2"
+        fi
+        echo "prefix=$PREFIX" >> "$GITHUB_OUTPUT"
+
+    - name: Validate release prefix
+      if: inputs.from-git != 'true' && runner.os != 'Windows'
+      shell: bash
+      env:
+        R2_PREFIX: ${{ steps.prefix.outputs.prefix }}
+      run: |
+        if [ "$R2_PREFIX" != "/usr" ]; then
           echo "::error::Custom prefixes are only supported for git builds on Unix; release packages install to /usr"
           exit 1
         fi
@@ -71,7 +82,7 @@ runs:
       shell: bash
       env:
         R2V: ${{ steps.resolve.outputs.r2v }}
-        R2_PREFIX: ${{ inputs.prefix }}
+        R2_PREFIX: ${{ steps.prefix.outputs.prefix }}
       run: |
         set -e
         BUILD_DIR="$(mktemp -d "${RUNNER_TEMP:-/tmp}/r2build.XXXXXX")"
@@ -83,11 +94,10 @@ runs:
         fi
         git clone "${CLONEARGS[@]}" https://github.com/radareorg/radare2.git "$BUILD_DIR"
         cd "$BUILD_DIR"
-        INSTALL_PREFIX="${R2_PREFIX:-/usr}"
         export CFLAGS="-O2 -Wno-unused-result"
-        ./sys/install.sh --install "--prefix=$INSTALL_PREFIX"
-        if [ -d "$INSTALL_PREFIX/bin" ]; then
-          echo "$INSTALL_PREFIX/bin" >> "$GITHUB_PATH"
+        ./sys/install.sh --install "--prefix=$R2_PREFIX"
+        if [ -d "$R2_PREFIX/bin" ]; then
+          echo "$R2_PREFIX/bin" >> "$GITHUB_PATH"
         fi
 
     # --- BUILD FROM GIT (Windows) ---
@@ -96,7 +106,7 @@ runs:
       shell: powershell
       env:
         R2V: ${{ steps.resolve.outputs.r2v }}
-        R2_PREFIX: ${{ inputs.prefix }}
+        R2_PREFIX: ${{ steps.prefix.outputs.prefix }}
       run: |
         $ErrorActionPreference = 'Stop'
         $cloneArgs = @('clone', '--depth=1')
@@ -107,9 +117,6 @@ runs:
           Set-Location $buildDir
           pip install meson ninja
           $prefix = $env:R2_PREFIX
-          if (-not $prefix -or $prefix -eq '/usr') {
-            $prefix = Join-Path $env:RUNNER_TEMP 'radare2'
-          }
           meson setup --buildtype=release --prefix="$prefix" build
           ninja -C build
           ninja -C build install
@@ -164,7 +171,7 @@ runs:
       shell: powershell
       env:
         R2V: ${{ steps.resolve.outputs.r2v }}
-        R2_PREFIX: ${{ inputs.prefix }}
+        R2_PREFIX: ${{ steps.prefix.outputs.prefix }}
       run: |
         $ErrorActionPreference = 'Stop'
         $R2V = $env:R2V
@@ -178,9 +185,6 @@ runs:
         $dest = Join-Path $env:RUNNER_TEMP 'radare2.zip'
         Invoke-WebRequest -Uri $url -OutFile $dest -UseBasicParsing
         $prefix = $env:R2_PREFIX
-        if (-not $prefix -or $prefix -eq '/usr') {
-          $prefix = Join-Path $env:RUNNER_TEMP 'radare2'
-        }
         if (Test-Path $prefix) { Remove-Item -Path $prefix -Recurse -Force }
         Expand-Archive -Path $dest -DestinationPath $prefix -Force
         # Flatten the zip's single top-level directory unless bin/ is already at the root
@@ -191,19 +195,6 @@ runs:
         }
         $resolvedBin = (Resolve-Path "$prefix\bin").Path
         $resolvedBin | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
-
-    # --- EXPORT PREFIX ---
-    - name: Export prefix
-      id: prefix
-      shell: bash
-      env:
-        R2_PREFIX: ${{ inputs.prefix }}
-      run: |
-        PREFIX="${R2_PREFIX:-/usr}"
-        if [ "$RUNNER_OS" = "Windows" ] && [ "$PREFIX" = "/usr" ]; then
-          PREFIX="$RUNNER_TEMP/radare2"
-        fi
-        echo "prefix=$PREFIX" >> "$GITHUB_OUTPUT"
 
     # --- VERIFY ---
     - name: Verify installation
