@@ -195,12 +195,11 @@ runs:
         }
         if (Test-Path $prefix) { Remove-Item -Path $prefix -Recurse -Force }
         Expand-Archive -Path $dest -DestinationPath $prefix -Force
-        # Flatten nested subdirectory if present
+        # Flatten the zip's single top-level directory unless bin/ is already at the root
         $subdirs = Get-ChildItem -Path $prefix -Directory
-        if ($subdirs.Count -eq 1) {
-          $subdir = $subdirs[0]
-          Get-ChildItem -Path $subdir.FullName | Move-Item -Destination $prefix -Force
-          Remove-Item -Path $subdir.FullName -Recurse -Force
+        if ($subdirs.Count -eq 1 -and -not (Test-Path "$prefix\bin")) {
+          Get-ChildItem -Path $subdirs[0].FullName | Move-Item -Destination $prefix -Force
+          Remove-Item -Path $subdirs[0].FullName -Recurse -Force
         }
         $resolvedBin = (Resolve-Path "$prefix\bin").Path
         $resolvedBin | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
