@@ -45,34 +45,22 @@ runs:
       id: resolve
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}
         R2V_INPUT: ${{ inputs.version }}
         FROM_GIT: ${{ inputs.from-git }}
       run: |
         set -e
         R2V="$R2V_INPUT"
         if [ -z "$R2V" ] && [ "$FROM_GIT" != "true" ]; then
-          # The API occasionally returns an HTML error page instead of JSON
-          # ("invalid character '<' looking for beginning of value"), so retry
-          for i in 1 2 3; do
-            if R2V=$(gh api repos/radareorg/radare2/releases/latest --jq .tag_name) && [ -n "$R2V" ]; then
-              break
-            fi
-            R2V=""
-            echo "::warning::Attempt $i to resolve latest release failed, retrying"
-            sleep $((i * 2))
-          done
-          if [ -z "$R2V" ]; then
-            # Fallback: resolve the tag from the releases/latest redirect (no API involved)
-            URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/radareorg/radare2/releases/latest) || true
-            case "$URL" in
-              */tag/*) R2V="${URL##*/tag/}" ;;
-            esac
-          fi
-          if [ -z "$R2V" ]; then
-            echo "::error::Failed to resolve latest radare2 release version"
-            exit 1
-          fi
+          # Resolve the tag from the releases/latest redirect: unlike the gh api,
+          # this needs no token and cannot return HTML instead of JSON
+          URL=$(curl -fsSL --retry 3 -o /dev/null -w '%{url_effective}' https://github.com/radareorg/radare2/releases/latest) || true
+          case "$URL" in
+            */tag/*) R2V="${URL##*/tag/}" ;;
+            *)
+              echo "::error::Failed to resolve latest radare2 release version"
+              exit 1
+              ;;
+          esac
           echo "Resolved latest release: $R2V"
         fi
         echo "r2v=$R2V" >> "$GITHUB_OUTPUT"
