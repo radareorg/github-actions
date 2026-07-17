@@ -136,12 +136,9 @@ runs:
       run: |
         ARCH=$(dpkg --print-architecture 2>/dev/null || echo amd64)
         BASE="https://github.com/radareorg/radare2/releases/download/${R2V}"
-        cd /tmp
-        wget -q "${BASE}/radare2_${R2V}_${ARCH}.deb"
-        wget -q "${BASE}/radare2-dev_${R2V}_${ARCH}.deb"
-        sudo dpkg -i "radare2_${R2V}_${ARCH}.deb"
-        sudo dpkg -i "radare2-dev_${R2V}_${ARCH}.deb"
-        rm -f radare2*.deb
+        cd "$RUNNER_TEMP"
+        curl -fsSL --retry 3 -O "${BASE}/radare2_${R2V}_${ARCH}.deb" -O "${BASE}/radare2-dev_${R2V}_${ARCH}.deb"
+        sudo dpkg -i "radare2_${R2V}_${ARCH}.deb" "radare2-dev_${R2V}_${ARCH}.deb"
 
     # --- INSTALL FROM RELEASE (macOS) ---
     - name: Install from release (macOS)
