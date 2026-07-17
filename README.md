@@ -16,7 +16,7 @@ Reference the action from your workflow:
 |-------|-------------|---------|
 | `version` | Radare2 version to install (e.g., `6.1.2`). Empty for latest. | `""` (latest) |
 | `from-git` | Build from git source instead of release packages. | `false` |
-| `prefix` | Installation prefix. On Linux/macOS, release packages always install to `/usr`; a custom prefix requires `from-git`. | `/usr` (`RUNNER_TEMP/radare2` on Windows) |
+| `prefix` | Installation prefix. Release packages install to the platform default; a custom prefix requires `from-git`. | `/usr` on Linux, `/usr/local` on macOS, `RUNNER_TEMP/radare2` on Windows |
 
 ## Outputs
 
@@ -140,8 +140,8 @@ steps:
 
 The operating system is auto-detected from the runner:
 
-- **Linux** - Downloads and installs `.deb` packages (`radare2` + `radare2-dev`). Architecture is detected via `dpkg --print-architecture`.
-- **macOS** - Downloads and installs `.pkg` package. Detects `arm64` vs `x86_64` automatically.
+- **Linux** - Downloads and installs `.deb` packages (`radare2` + `radare2-dev`) under `/usr`. Architecture is detected via `dpkg --print-architecture`.
+- **macOS** - Downloads and installs `.pkg` package under `/usr/local`. Detects `arm64` vs `x86_64` automatically.
 - **Windows** - Downloads and extracts the `.zip` release using PowerShell, handles nested subdirectories automatically, then adds `bin/` to `PATH`.
 
 When `from-git` is `true`, the action clones the radare2 repository and builds from source using `sys/install.sh` on Unix or `meson`/`ninja` on Windows.

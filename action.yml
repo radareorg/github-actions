@@ -14,7 +14,7 @@ inputs:
     required: false
     default: 'false'
   prefix:
-    description: 'Installation prefix. Linux and macOS release packages install to /usr.'
+    description: 'Installation prefix. Defaults to /usr on Linux, /usr/local on macOS, and RUNNER_TEMP/radare2 on Windows.'
     required: false
     default: '/usr'
 
@@ -36,9 +36,10 @@ runs:
         R2_PREFIX: ${{ inputs.prefix }}
       run: |
         PREFIX="${R2_PREFIX:-/usr}"
-        if [ "$RUNNER_OS" = "Windows" ] && [ "$PREFIX" = "/usr" ]; then
-          PREFIX="$RUNNER_TEMP/radare2"
-        fi
+        case "$RUNNER_OS:$PREFIX" in
+          macOS:/usr) PREFIX="/usr/local" ;;
+          Windows:/usr) PREFIX="$RUNNER_TEMP/radare2" ;;
+        esac
         echo "prefix=$PREFIX" >> "$GITHUB_OUTPUT"
 
     - name: Validate release prefix
@@ -47,8 +48,12 @@ runs:
       env:
         R2_PREFIX: ${{ steps.prefix.outputs.prefix }}
       run: |
-        if [ "$R2_PREFIX" != "/usr" ]; then
-          echo "::error::Custom prefixes are only supported for git builds on Unix; release packages install to /usr"
+        case "$RUNNER_OS" in
+          Linux) EXPECTED_PREFIX="/usr" ;;
+          macOS) EXPECTED_PREFIX="/usr/local" ;;
+        esac
+        if [ "$R2_PREFIX" != "$EXPECTED_PREFIX" ]; then
+          echo "::error::Custom prefixes are only supported for git builds on Unix; release packages install to $EXPECTED_PREFIX"
           exit 1
         fi
 
