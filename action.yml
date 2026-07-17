@@ -29,6 +29,18 @@ outputs:
 runs:
   using: 'composite'
   steps:
+    - name: Validate release prefix
+      if: inputs.from-git != 'true' && runner.os != 'Windows'
+      shell: bash
+      env:
+        R2_PREFIX: ${{ inputs.prefix }}
+      run: |
+        PREFIX="${R2_PREFIX:-/usr}"
+        if [ "$PREFIX" != "/usr" ]; then
+          echo "::error::Custom prefixes are only supported for git builds on Unix; release packages install to /usr"
+          exit 1
+        fi
+
     - name: Resolve version
       id: resolve
       shell: bash
@@ -64,18 +76,6 @@ runs:
           echo "Resolved latest release: $R2V"
         fi
         echo "r2v=$R2V" >> "$GITHUB_OUTPUT"
-
-    - name: Validate release prefix
-      if: inputs.from-git != 'true' && runner.os != 'Windows'
-      shell: bash
-      env:
-        R2_PREFIX: ${{ inputs.prefix }}
-      run: |
-        PREFIX="${R2_PREFIX:-/usr}"
-        if [ "$PREFIX" != "/usr" ]; then
-          echo "::error::Custom prefixes are only supported for git builds on Unix; release packages install to /usr"
-          exit 1
-        fi
 
     # --- BUILD FROM GIT (Unix) ---
     - name: Build from git (Unix)
