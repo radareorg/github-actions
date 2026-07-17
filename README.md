@@ -16,7 +16,7 @@ Reference the action from your workflow:
 |-------|-------------|---------|
 | `version` | Radare2 version to install (e.g., `6.1.2`). Empty for latest. | `""` (latest) |
 | `from-git` | Build from git source instead of release packages. | `false` |
-| `prefix` | Installation prefix. | `/usr` |
+| `prefix` | Installation prefix. On Linux/macOS, release packages always install to `/usr`; a custom prefix requires `from-git`. | `/usr` (`RUNNER_TEMP/radare2` on Windows) |
 
 ## Outputs
 
