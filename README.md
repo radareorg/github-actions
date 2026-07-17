@@ -7,7 +7,7 @@ Composite GitHub Action to install radare2 in CI workflows. Supports Linux, macO
 Reference the action from your workflow:
 
 ```yaml
-- uses: radareorg/github-actions@v2
+- uses: radareorg/github-actions@v3
 ```
 
 ## Inputs
@@ -31,14 +31,14 @@ Reference the action from your workflow:
 
 ```yaml
 steps:
-  - uses: radareorg/github-actions@v2
+  - uses: radareorg/github-actions@v3
 ```
 
 ### Install a specific version
 
 ```yaml
 steps:
-  - uses: radareorg/github-actions@v2
+  - uses: radareorg/github-actions@v3
     with:
       version: '6.1.2'
 ```
@@ -47,7 +47,7 @@ steps:
 
 ```yaml
 steps:
-  - uses: radareorg/github-actions@v2
+  - uses: radareorg/github-actions@v3
     with:
       from-git: true
 ```
@@ -56,7 +56,7 @@ steps:
 
 ```yaml
 steps:
-  - uses: radareorg/github-actions@v2
+  - uses: radareorg/github-actions@v3
     with:
       version: '6.1.2'
       from-git: true
@@ -66,7 +66,7 @@ steps:
 
 ```yaml
 steps:
-  - uses: radareorg/github-actions@v2
+  - uses: radareorg/github-actions@v3
     with:
       from-git: true
       prefix: '/opt/radare2'
@@ -131,7 +131,7 @@ jobs:
 
 ```yaml
 steps:
-  - uses: radareorg/github-actions@v2
+  - uses: radareorg/github-actions@v3
     id: r2
   - run: echo "Installed r2 ${{ steps.r2.outputs.version }} at ${{ steps.r2.outputs.prefix }}"
 ```
