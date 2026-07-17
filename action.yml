@@ -40,7 +40,23 @@ runs:
         set -e
         R2V="$R2V_INPUT"
         if [ -z "$R2V" ] && [ "$FROM_GIT" != "true" ]; then
-          R2V=$(gh api repos/radareorg/radare2/releases/latest --jq .tag_name) || true
+          # The API occasionally returns an HTML error page instead of JSON
+          # ("invalid character '<' looking for beginning of value"), so retry
+          for i in 1 2 3; do
+            if R2V=$(gh api repos/radareorg/radare2/releases/latest --jq .tag_name) && [ -n "$R2V" ]; then
+              break
+            fi
+            R2V=""
+            echo "::warning::Attempt $i to resolve latest release failed, retrying"
+            sleep $((i * 2))
+          done
+          if [ -z "$R2V" ]; then
+            # Fallback: resolve the tag from the releases/latest redirect (no API involved)
+            URL=$(curl -fsSL -o /dev/null -w '%{url_effective}' https://github.com/radareorg/radare2/releases/latest) || true
+            case "$URL" in
+              */tag/*) R2V="${URL##*/tag/}" ;;
+            esac
+          fi
           if [ -z "$R2V" ]; then
             echo "::error::Failed to resolve latest radare2 release version"
             exit 1
