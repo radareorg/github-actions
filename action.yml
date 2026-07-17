@@ -59,7 +59,6 @@ runs:
         R2V_INPUT: ${{ inputs.version }}
         FROM_GIT: ${{ inputs.from-git }}
       run: |
-        set -e
         R2V="$R2V_INPUT"
         if [ -z "$R2V" ] && [ "$FROM_GIT" != "true" ]; then
           # Resolve the tag from the releases/latest redirect: unlike the gh api,
@@ -84,7 +83,6 @@ runs:
         R2V: ${{ steps.resolve.outputs.r2v }}
         R2_PREFIX: ${{ steps.prefix.outputs.prefix }}
       run: |
-        set -e
         BUILD_DIR="$(mktemp -d "${RUNNER_TEMP:-/tmp}/r2build.XXXXXX")"
         trap 'rm -rf "$BUILD_DIR"' EXIT
 
@@ -136,7 +134,6 @@ runs:
       env:
         R2V: ${{ steps.resolve.outputs.r2v }}
       run: |
-        set -e
         ARCH=$(dpkg --print-architecture 2>/dev/null || echo amd64)
         BASE="https://github.com/radareorg/radare2/releases/download/${R2V}"
         cd /tmp
@@ -153,10 +150,8 @@ runs:
       env:
         R2V: ${{ steps.resolve.outputs.r2v }}
       run: |
-        set -e
-        ARCH=$(uname -m)
-        case "$ARCH" in
-          arm64|aarch64) PKG_ARCH="arm64" ;;
+        case "$(uname -m)" in
+          arm64) PKG_ARCH="arm64" ;;
           *) PKG_ARCH="x64" ;;
         esac
         BASE="https://github.com/radareorg/radare2/releases/download/${R2V}"
@@ -201,6 +196,5 @@ runs:
       id: verify
       shell: bash
       run: |
-        set -e
         radare2 -v
         echo "version=$(radare2 -qv)" >> "$GITHUB_OUTPUT"
