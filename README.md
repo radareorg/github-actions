@@ -72,6 +72,19 @@ steps:
       prefix: '/opt/radare2'
 ```
 
+### Build from git on Windows
+
+```yaml
+steps:
+  - uses: actions/checkout@v7
+  - uses: TheMrMilchmann/setup-msvc-dev@v4
+    with:
+      arch: x64
+  - uses: radareorg/github-actions@v3
+    with:
+      from-git: true
+```
+
 ### Multi-platform CI with build matrix
 
 ```yaml
@@ -98,8 +111,8 @@ jobs:
             build_system: make
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: radareorg/github-actions@v2
+      - uses: actions/checkout@v7
+      - uses: radareorg/github-actions@v3
         id: r2
       - name: Build with Make
         if: matrix.build_system == 'make'
@@ -135,7 +148,7 @@ When `from-git` is `true`, the action clones the radare2 repository and builds f
 
 ## Notes
 
-- Windows git builds use meson/ninja and require a Visual C++ environment. Add `ilammy/msvc-dev-cmd@v1` before this action if building from source on Windows.
+- Windows git builds use meson/ninja and require a Visual C++ environment. Add `TheMrMilchmann/setup-msvc-dev@v4` with `arch: x64` before this action if building from source on Windows.
 - Both `radare2` and `radare2-dev` packages are installed on Linux so headers and pkg-config files are available for building plugins.
 - The action verifies the installation by running `radare2 -v` at the end.
 - Use `concurrency` with `cancel-in-progress: true` to avoid wasting CI minutes on superseded pushes.
