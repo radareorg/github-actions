@@ -166,7 +166,7 @@ runs:
         esac
         BASE="https://github.com/radareorg/radare2/releases/download/${R2V}"
         cd /tmp
-        curl -fSL "${BASE}/radare2-${PKG_ARCH}-${R2V}.pkg" -o r2.pkg
+        curl -fsSL "${BASE}/radare2-${PKG_ARCH}-${R2V}.pkg" -o r2.pkg
         sudo installer -pkg r2.pkg -target /
         rm -f r2.pkg
 
